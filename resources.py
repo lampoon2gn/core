@@ -1,10 +1,13 @@
+from modules.search import Search
 from flask_restful import Resource
+
 
 class AllSheets(Resource):
     def get(self):
+        message = Search.analyze()
         return {
             'status_code': 200,
-            'message': "API end-point to list all the sheets"
+            'message': message
         }
 
 class Analyze(Resource):
