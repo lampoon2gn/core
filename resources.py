@@ -1,7 +1,6 @@
 from modules.search import Search
 from flask_restful import Resource
 
-
 class AllSheets(Resource):
     def get(self):
         message = Search.analyze()
