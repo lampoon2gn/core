@@ -11,6 +11,13 @@ class AllSheets(Resource):
         }
 
 class Analyze(Resource):
+    def get(self):
+        message = Search.analyze()
+        return {
+            'status_code': 200,
+            'message': message 
+        }
+
     def post(self):
         message = Search.analyze()
         return {

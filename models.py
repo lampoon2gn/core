@@ -4,7 +4,6 @@ class Sheet(db.Model):
     __tablename__ = 'sheet'
 
     sheet_label = db.Column(db.String(), primary_key=True)
-    iteration = db.Column(db.Integer, unique=True)
     avgmoe = db.Column(db.DECIMAL())
     avgsg = db.Column(db.DECIMAL())
     avgmc = db.Column(db.DECIMAL())
