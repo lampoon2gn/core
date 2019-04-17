@@ -5,7 +5,6 @@ from flask import request
 import csv
 import os
 from app import app
-import boto3, botocore
 
 
 class Analyze(Resource):
