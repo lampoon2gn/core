@@ -8,13 +8,9 @@ UPLOAD_FOLDER = 'UPLOADS/'
 #APP
 app = Flask(__name__, template_folder='templates')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://epbwbeeuzkuhwa:a5c4009f63a95fa6266d17e27dc5b600dd716dbed12b7585cbdcb28961fcb0dc@ec2-54-225-113-7.compute-1.amazonaws.com:5432/d1v6cjh3kibd5f'
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://yukalangbuana:yukalangbuana@localhost:5432/asiamajor'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://yukalangbuana:yukalangbuana@localhost:5432/asiamajor' #====> LOCAL DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-#app.config['S3_BUCKET'] = 'saudagar-core-bucket'
-#app.config['S3_KEY'] = 'AKIAI4DBAUFUEES2BEXQ'
-#app.config['S3_SECRET'] = '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'
-#app.config['S3_LOCATION'] = 'http://saudagar-core-bucket.s3.amazonaws.com/'
 
 
 #API
