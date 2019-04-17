@@ -53,12 +53,12 @@ class Analyze(Resource):
                 'message': 'File extension is not allowed'
             }
         else:
-            input_file.save(os.path.join('tmp', app.config['UPLOAD_FOLDER'], input_file.filename))
+            input_file.save(os.path.join('/tmp/', input_file.filename))
             #output = self.upload_file_to_s3(input_file, app.config["S3_BUCKET"])
             #aws_file = s3.get_object(Bucket=app.config["S3_BUCKET"], Key=input_file.filename)['Body']
             #byte_file = pickle.loads(aws_file.read())
-            message = Search.analyze(os.path.join('tmp', app.config['UPLOAD_FOLDER'], input_file.filename)) #Might have to change the CURL filename on request.files['<CURL_FILENAME>']
-            os.remove(os.path.join('tmp', app.config['UPLOAD_FOLDER'], input_file.filename))
+            message = Search.analyze(os.path.join('/tmp/', input_file.filename)) #Might have to change the CURL filename on request.files['<CURL_FILENAME>']
+            os.remove(os.path.join('/tmp/', input_file.filename))
             return {
                 'status_code': 200,
                 'input_sheet': input_file.filename,
