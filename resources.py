@@ -6,24 +6,36 @@ import csv
 import os
 from app import app
 
-class AllSheets(Resource):
-    def get(self):
-        return {
-            'status_code': 200,
-            'message': "API endpoint for getting all the sheets"
-        }
-
-
 class Analyze(Resource):
     
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    def __init__(self):
+        self.ALLOWED_EXTENSIONS = set(['csv'])
+
+    def allowed_file(self, filename):
+        return '.' in filename and filename.rsplit('.', 1)[1].lower() in self.ALLOWED_EXTENSIONS
+
+    def get(self):
+        return render_template("analyze.html")
 
     def post(self):
-        input_file = request.files['']
-        input_file.save(os.path.join(app.config['UPLOAD_FOLDER'], input_file.filename))
-        message = Search.analyze(os.path.join(app.config['UPLOAD_FOLDER'], input_file.filename)) #Might have to change the CURL filename on request.files['<CURL_FILENAME>']
-        return {
-            'status_code': 200,
-            'sheets': message
-        }
+        if request.files['file'].filename == '':
+            return {
+                'status_code': 400,
+                'message': 'Invalid request: No file detected.'
+            }
+        
+        input_file = request.files['file']
+        if not self.allowed_file(input_file.filename):
+            return {
+                'status_code': 422,
+                'message': 'File extension is not allowed'
+            }
+        else:
+            input_file.save(os.path.join(app.config['UPLOAD_FOLDER'], input_file.filename))
+            message = Search.analyze(os.path.join(app.config['UPLOAD_FOLDER'], input_file.filename)) #Might have to change the CURL filename on request.files['<CURL_FILENAME>']
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], input_file.filename))
+            return {
+                'status_code': 200,
+                'input_sheet': input_file.filename,
+                'predicted_sheets': message
+            }
