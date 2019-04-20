@@ -1,5 +1,6 @@
 from app import db
 
+
 class Sheet(db.Model):
     __tablename__ = 'sheet'
 

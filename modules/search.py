@@ -1,20 +1,21 @@
-from flask import jsonify
-from models import Sheet
+import os
 import pandas as pd
+from numpy import nan
+from models import Sheet
+from flask import jsonify
+from decimal import Decimal
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
-from decimal import Decimal
-from numpy import nan
-import os
+
 
 class Search():
 
-    def __init__(self):
-        self.db_df = self.df_builder()
-        
+    def df_builder(self, feature_name):
+        dict_of_features = {'avgmoe': Sheet.avgmoe, 'avgsg': Sheet.avgsg, 'avgmc': Sheet.avgsg, 'avgvel': Sheet.avgvel, 
+        'avgupt': Sheet.avgupt, 'pkdensity': Sheet.pkdensity, 'effvel': Sheet.effvel, 'lvel': Sheet.lvel, 'rvel': Sheet.rvel,
+        'lupt': Sheet.lupt, 'rupt': Sheet.rupt, 'sg': Sheet.sg, 'mc': Sheet.mc}
 
-    def df_builder(self):
-        response = Sheet.query.with_entities(Sheet.sheet_label, Sheet.effvel).all()
+        response = Sheet.query.with_entities(Sheet.sheet_label, dict_of_features[feature_name.lower()]).all()
 
         master_number_data = []
         master_label_data = []
@@ -75,20 +76,22 @@ class Search():
 
     #produce complete_df with the input sheet as the last column
     def input_preprocess(self, in_filename,feature_of_interest):
+        db_df = self.df_builder(feature_of_interest)
+
         if feature_of_interest == "EffVel":
             input_df = self.wheel_feature_compiler(in_filename,feature_of_interest)
             #input_df = input_df.dropna(thresh=int(0.95*(input_df.shape[0]))).reset_index()
-            if input_df.shape[0]>len(self.db_df):
-                input_df = input_df.drop(range(len(self.db_df),len(input_df)))
-            complete_df = pd.concat((self.db_df,input_df),axis=1,sort=False)
+            if input_df.shape[0]>len(db_df):
+                input_df = input_df.drop(range(len(db_df),len(input_df)))
+            complete_df = pd.concat((db_df,input_df),axis=1,sort=False)
             complete_df = complete_df.fillna(value = complete_df.mean(axis=0))
             complete_df = complete_df.sub(complete_df.mean(axis=0),axis=1)
             
         else:
             input_df = self.cavity_feature_compiler(in_filename,feature_of_interest)
             if input_df.shape[0]>len(db_df):
-                input_df = input_df.drop(range(len(self.db_df),len(input_df)))
-            complete_df = pd.concat((self.db_df,input_df),axis=1,sort=False)
+                input_df = input_df.drop(range(len(db_df),len(input_df)))
+            complete_df = pd.concat((db_df,input_df),axis=1,sort=False)
             complete_df = complete_df.dropna(thresh=0.95*len(complete_df.columns)).reset_index(drop=True).drop(range(0,20)).reset_index(drop=True)
             complete_df = complete_df.fillna(value = complete_df.mean(axis=0))
             complete_df = complete_df.sub(complete_df.mean(axis=0),axis=1)
