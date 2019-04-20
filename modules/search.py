@@ -106,11 +106,13 @@ class Search():
         for sheet in complete_df:
             if sheet != feature_of_interest:
                 rating = cosine_similarity(complete_df[feature_of_interest].values.reshape(1, -1),complete_df[sheet].values.reshape(1, -1))
-                ratings[sheet] = rating
-        sorted_ratings = [{k: ratings[k][0][0]} for k in sorted(ratings, key=ratings.get, reverse=True)]
-        result = sorted_ratings[0:top_x]
+                ratings[sheet] = {"cosine_similarity_score": float(rating)}
+        sorted_ratings = sorted(ratings.items(), key=lambda item: item[1]['cosine_similarity_score'], reverse=True)
+        result = sorted_ratings[0:top_x] #Array of lists
+
+        #JSON building (if you want to add more metrics, add them here)
         for d in result:
-            result_dic.update(d)
+            result_dic[d[0]] = d[1]
         
         return result_dic
 
