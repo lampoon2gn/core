@@ -1,5 +1,9 @@
 import os
 import pandas as pd
+import csv
+import numpy as np 
+import math
+from models import Sheet
 from numpy import nan
 from models import Sheet
 from flask import jsonify
@@ -7,32 +11,43 @@ from decimal import Decimal
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import cosine_similarity
 
-
 class Search():
 
     def df_builder(self, feature_name):
-        dict_of_features = {'avgmoe': Sheet.avgmoe, 'avgsg': Sheet.avgsg, 'avgmc': Sheet.avgsg, 'avgvel': Sheet.avgvel, 
+
+        dict_of_features = {'avgmoe': Sheet.avgmoe, 'avgsg': Sheet.avgsg, 'avgmc': Sheet.avgsg, 'avgvel': Sheet.avgvel,
         'avgupt': Sheet.avgupt, 'pkdensity': Sheet.pkdensity, 'effvel': Sheet.effvel, 'lvel': Sheet.lvel, 'rvel': Sheet.rvel,
         'lupt': Sheet.lupt, 'rupt': Sheet.rupt, 'sg': Sheet.sg, 'mc': Sheet.mc}
 
         response = Sheet.query.with_entities(Sheet.sheet_label, dict_of_features[feature_name.lower()]).all()
 
-        master_number_data = []
-        master_label_data = []
+        is_decimal = True
+        try:
+            float(response[0][1])
+        except:
+            is_decimal = False
 
-        for i in range(len(response)):
-            one_sheet_number_data = []
-            for data in response[i][1]:
-                if data != None:
-                    one_sheet_number_data.append(float(data))
-                else:
-                    one_sheet_number_data.append(nan)
-            
-            master_number_data.append(pd.Series(one_sheet_number_data))
-            master_label_data.append(str(response[i][0]))
+        if is_decimal == True:
+            master_label_data = [str(response[i][0]) for i in range(len(response))]
+            master_number_data = [pd.Series(float(response[i][1])) for i in range(len(response))]
+            df = pd.concat(master_number_data, axis=1, keys=[label for label in master_label_data])
 
-        df = pd.concat(master_number_data, axis=1, keys=[label for label in master_label_data])
+        else:
+            master_number_data = []
+            master_label_data = []
 
+            for i in range(len(response)):
+                one_sheet_number_data = []
+                #loop for list
+                for data in response[i][1]:
+                    if data != None:
+                        one_sheet_number_data.append(float(data))
+                    else:
+                        one_sheet_number_data.append(nan)
+
+                master_number_data.append(pd.Series(one_sheet_number_data))
+                master_label_data.append(str(response[i][0]))
+            df = pd.concat(master_number_data, axis=1, keys=[label for label in master_label_data])
         return df
 
 
@@ -106,7 +121,15 @@ class Search():
         for sheet in complete_df:
             if sheet != feature_of_interest:
                 rating = cosine_similarity(complete_df[feature_of_interest].values.reshape(1, -1),complete_df[sheet].values.reshape(1, -1))
-                ratings[sheet] = {"cosine_similarity_score": float(rating)}
+                ratings[sheet] = {
+                   "cosine_similarity_score": float(rating),
+                   "avgMoe": float(Sheet.query.filter_by(sheet_label=sheet).first().avgmoe),
+                   "avgSg": float(Sheet.query.filter_by(sheet_label=sheet).first().avgsg),
+                   "avgMc": float(Sheet.query.filter_by(sheet_label=sheet).first().avgmc),
+                   "avgVel": float(Sheet.query.filter_by(sheet_label=sheet).first().avgvel),
+                   "avgUPT": float(Sheet.query.filter_by(sheet_label=sheet).first().avgupt),
+                   "pkDensity": float(Sheet.query.filter_by(sheet_label=sheet).first().pkdensity) 
+                }
         sorted_ratings = sorted(ratings.items(), key=lambda item: item[1]['cosine_similarity_score'], reverse=True)
         result = sorted_ratings[0:top_x] #Array of lists
 
@@ -115,13 +138,253 @@ class Search():
             result_dic[d[0]] = d[1]
         
         return result_dic
+   
+
+    #reading in first chunk of data from csv (wheel data)
+    def read_info_wheel(self, sheet):
+        l = []
+        i = 0
+
+        #with open(os.path.join(cwd,path)) as df:
+        with open(sheet) as df:
+            r = csv.reader(df)
+            for row in r:
+                if i > 5 and row != ['Avg Vel', 'stdev Vel.', 'avg UPT', 'stdev UPT']:
+                    l.append(row)
+                if row == ['Avg Vel', 'stdev Vel.', 'avg UPT', 'stdev UPT']:
+                    break
+                i += 1
+        #print(len(l))
+        #print(l[-5:])
+        return l
+
+    def read_info_avg(self, sheet):
+        l = []
+        i = 0
+        with open(sheet) as df:
+            r = csv.reader(df)
+            for row in r: 
+                if i == 2:
+                    #l.append(row)
+                    #break
+                    return row
+                    
+                i += 1
+        return l 
+
+
+    #returns certain column from dataset
+    def get_n_column(self, l, n):
+        col = []
+
+        for row in l:
+            if len(row) == 7:
+                col.append(row[n])
+        return col
+
+
+    def get_halves(self, l):
+
+        i = 0
+        fhalf, shalf = [], []
+
+        for row in l:
+            if (i < len(l)/2):
+                fhalf.append(row)
+            else:
+                shalf.append(row)
+            i += 1
+        return fhalf, shalf
+
+
+    def get_vel_col(self, df, sheet):
+        return df[sheet]
+
+    #converting strings to float representation and replacing empty strings with 0
+    def replacewithzero(self, l):
+        #newl = [x if not isinstance(x,str) else 0 for x in l]
+        newl = [float(x) if (x != '') else 0 for x in l]
+        return newl
+
+    def replaceNan(self, l):
+        newl = [x if (math.isnan(x) == False) else 0 for x in l]
+        return newl
+
+    def trendline(self, data, order=1):
+        coeffs = np.polyfit(data.index.values, list(data), order)
+        slope = coeffs[-2]
+        return float(slope)
+
+    def see_trend(self, l):
+
+        x = [i for i in range(0,len(l))]
+        df = pd.DataFrame({'x':x, 'y':l})
+        slope = self.trendline(df['y'])
+        #print(slope)
+        return slope
+
+
+    def parse(self, s, deli):
+        l = []
+        temps = ''
+
+        for ch in s:
+            if ch != deli and ch != s[-1]:
+                temps += ch
+            elif ch != deli and ch == s[-1]:
+                temps += s[-1]
+                l.append(temps)
+            else:
+                l.append(temps)
+                temps = ''
+        return(l)
+            
+
+
+    def filt(self, input, l):
+
+        '''
+        FEATURES:
+        *vm = velocity slope 
+        1) pos_vm_fhalf 3) pos_vm_shalf 5) avgmoe>2.0 6) avgsg > .545 
+        7) avgmc > 4.95 8) avgvel > 5000  
+        '''
+
+        ipvmfh, ipvmsh, imoe, isg, imc, ivel, iupt, ithic, iden = 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+        #looking at input features
+        in_wheel = self.read_info_wheel(input)
+        in_wh_fh, in_wh_sh = self.get_halves(in_wheel)
+        
+        velcol = self.get_n_column(in_wh_fh, 1)
+        newvelcol = self.replacewithzero(velcol)
+        if self.see_trend(newvelcol) > 0:
+            ipvmfh = 1
+        
+        velcol = self.get_n_column(in_wh_sh, 1)
+        newvelcol = self.replacewithzero(velcol)
+        if self.see_trend(newvelcol) > 0:
+            ipvmsh = 1
+
+
+        in_avg = self.read_info_avg(input)
+
+        if float(in_avg[0]) > 2.0:
+            imoe = 1
+        if float(in_avg[1]) > .545:
+            isg = 1
+        if float(in_avg[2]) > 4.95:
+            imc = 1
+        if float(in_avg[3]) > 5000:
+            ivel = 1
+        if float(in_avg[4]) > 445:
+            iupt = 1
+        #if float(in_avg[7]) > .125:
+            #ithic = 1
+        if float(in_avg[10]) > .61:
+            iden = 1
+        
+        input_name = 'input'
+
+        #print(tokens[0],ipvmfh, ipvmsh, imoe, isg, imc, ivel, iupt, ithic, iden)
+
+        the_list = []
+
+        for i in l.keys():
+            temp = []
+            temp.append(i)
+
+            wheel = self.df_builder('effVel')[i]
+            #import pdb; pdb.set_trace()
+            wh_fh = wheel[:int(len(wheel)/2)]
+            wh_sh = wheel[int(len(wheel)/2):]
+
+            newvelcol = self.replacewithzero(wh_fh)
+            newvelcol = self.replaceNan(newvelcol)
+
+            if self.see_trend(newvelcol) > 0:
+                temp.append(1)
+            else:
+                temp.append(0)
+            
+            newvelcol = self.replacewithzero(wh_sh)
+            newvelcol = self.replaceNan(newvelcol)
+            if self.see_trend(newvelcol) > 0:
+                temp.append(1)
+            else:
+                temp.append(0)
+
+            #REST OF FEATURES
+            if self.df_builder('avgmoe')[i][0] > 2.0:
+                temp.append(1)
+            else:
+                temp.append(0)
+            
+            if self.df_builder('avgsg')[i][0] > .545:
+                temp.append(1)
+            else:
+                temp.append(0)
+            if self.df_builder('avgmc')[i][0] > 4.95:
+                temp.append(1)
+            else:
+                temp.append(0)
+            if self.df_builder('avgvel')[i][0] > 5000:
+                temp.append(1)
+            else:
+                temp.append(0)
+            if self.df_builder('avgupt')[i][0] > 445:
+                temp.append(1)
+            else:
+                temp.append(0)
+            '''
+            if self.df_builder('avgthick')[i][0] > .545:
+                temp.append(1)
+            else:
+                temp.append(0)
+            '''
+            temp.append(0)
+            if self.df_builder('pkDensity')[i][0] > .545:
+                temp.append(1)
+            else:
+                temp.append(0)
+
+            the_list.append(temp)
+        
+        return([input_name,ipvmfh, ipvmsh, imoe, isg, imc, ivel, iupt, ithic, iden], the_list)
+
+
+    def retrieveobt(self, inp, oup):
+        for sheet in oup:
+            i = 1
+            obo = 0
+            for b in inp[1:]:
+                if b != sheet[i]:
+                    obo += 1
+                i+=1
+            if obo < 3:
+                return sheet
+
+    def retrieveobo(self, inp, oup):
+        for sheet in oup:
+            i = 1
+            obo = 0
+            for b in inp[1:]:
+                if b != sheet[i]:
+                    obo += 1
+                i+=1
+            if obo < 2:
+                return sheet
+        return(self.retrieveobt(inp, oup))
 
 
     def identify(self, in_filename,feature_of_interest,top_x):
         complete_df = self.input_preprocess(in_filename,feature_of_interest)
-        result = self.compare_input_with_db(complete_df,feature_of_interest,top_x)
-        
-        return result
+        big_five = self.compare_input_with_db(complete_df,feature_of_interest,top_x)
+    
+        inp, oup = self.filt(in_filename, big_five)
+        the_one = self.retrieveobo(inp, oup)
+
+        return big_five, the_one[0]
 
 
     def analyze(input_file):
