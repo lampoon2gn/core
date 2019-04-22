@@ -29,11 +29,10 @@ class Analyze(Resource):
             }
         else:
             input_file.save(os.path.join('/tmp/', input_file.filename))
-            big_five, the_one = Search.analyze(os.path.join('/tmp/', input_file.filename))
+            big_five = Search.analyze(os.path.join('/tmp/', input_file.filename))
             os.remove(os.path.join('/tmp/', input_file.filename))
             return {
                 'success': True,
                 'input_sheet': input_file.filename,
-                'prediction': the_one,
                 'predicted_sheets': big_five
             }

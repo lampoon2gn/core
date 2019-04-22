@@ -381,10 +381,10 @@ class Search():
         complete_df = self.input_preprocess(in_filename,feature_of_interest)
         big_five = self.compare_input_with_db(complete_df,feature_of_interest,top_x)
     
-        inp, oup = self.filt(in_filename, big_five)
-        the_one = self.retrieveobo(inp, oup)
+        #inp, oup = self.filt(in_filename, big_five)
+        #the_one = self.retrieveobo(inp, oup)
 
-        return big_five, the_one[0]
+        return big_five
 
 
     def analyze(input_file):
