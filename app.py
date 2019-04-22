@@ -6,8 +6,8 @@ import os
 
 #APP
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://yukalangbuana:yukalangbuana@localhost:5432/asiamajor' #====> LOCAL DATABASE
+#app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://yukalangbuana:yukalangbuana@localhost:5432/asiamajor' #====> LOCAL DATABASE
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 #API
