@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, send_from_directory
 from flask_cors import CORS
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
@@ -21,6 +21,11 @@ CORS(app)
 
 import resources, models
 ###############################################################################################
+
+@app.route('/')
+def render_static():
+    return render_template('index.html')
+
 
 api.add_resource(resources.Ping, '{}/ping'.format(base_path))
 api.add_resource(resources.Analyze, '{}/analyze'.format(base_path))

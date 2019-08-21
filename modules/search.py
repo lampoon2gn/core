@@ -119,10 +119,13 @@ class Search():
         ratings={}
         result_dic={}
         for sheet in complete_df:
+            print("sheet in complete_df loop running!")
             if sheet != feature_of_interest:
+                print("sheet != feature_of_interest")
                 rating = cosine_similarity(complete_df[feature_of_interest].values.reshape(1, -1),complete_df[sheet].values.reshape(1, -1))
                 ratings[sheet] = {
                    "cosine_similarity_score": float(rating),
+                #    # WE MIGHT WANNA QUERY LATER.
                    "avgMoe": float(Sheet.query.filter_by(sheet_label=sheet).first().avgmoe),
                    "avgSg": float(Sheet.query.filter_by(sheet_label=sheet).first().avgsg),
                    "avgMc": float(Sheet.query.filter_by(sheet_label=sheet).first().avgmc),
@@ -130,6 +133,8 @@ class Search():
                    "avgUPT": float(Sheet.query.filter_by(sheet_label=sheet).first().avgupt),
                    "pkDensity": float(Sheet.query.filter_by(sheet_label=sheet).first().pkdensity) 
                 }
+                print("query performed.")
+            print()
         sorted_ratings = sorted(ratings.items(), key=lambda item: item[1]['cosine_similarity_score'], reverse=True)
         result = sorted_ratings[0:top_x] #Array of lists
 
@@ -379,14 +384,20 @@ class Search():
 
     def identify(self, in_filename,feature_of_interest,top_x):
         complete_df = self.input_preprocess(in_filename,feature_of_interest)
+        print("complete_df: ", complete_df)
         big_five = self.compare_input_with_db(complete_df,feature_of_interest,top_x)
+        print("big_five: ", big_five)
         inp, oup = self.filt(in_filename, big_five)
+        print("inp: ", inp)
+        print("oup: ", oup)
         the_one = self.retrieveobo(inp, oup)
+        print("the_one: ", the_one)
 
         return big_five, the_one[0]
 
 
     def analyze(input_file):
+        print(input_file)
         search = Search()
         
         return search.identify(input_file,"EffVel",5)
