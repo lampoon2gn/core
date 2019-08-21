@@ -1,5 +1,5 @@
-templates/
 env/
 __pycache__/
 .gitignore
 .vscode/
+.DS_Store

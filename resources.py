@@ -22,6 +22,7 @@ class Analyze(Resource):
 
     def post(self):
         input_file = request.files['file'] #Might have to change the CURL filename on request.files['<CURL_FILENAME>']
+        print(input_file)
 
         if input_file.filename == '':
             return {
@@ -36,6 +37,7 @@ class Analyze(Resource):
             }
         else:
             input_file.save(os.path.join('/tmp/', input_file.filename))
+            print("ANALYZING!")
             big_five, the_one = Search.analyze(os.path.join('/tmp/', input_file.filename))
             os.remove(os.path.join('/tmp/', input_file.filename))
             return {
