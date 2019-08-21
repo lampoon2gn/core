@@ -5,6 +5,13 @@ from flask import request
 from modules.search import Search
 from flask_restful import Resource
 
+class Ping(Resource):
+    def get(self):
+        return {
+                'success': True,
+                'message': "Pong!"
+            }
+
 class Analyze(Resource):
     
     def __init__(self):
