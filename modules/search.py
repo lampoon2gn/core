@@ -27,7 +27,7 @@ class Search():
         except:
             is_decimal = False
 
-        if is_decimal == True:
+        if is_decimal:
             master_label_data = [str(response[i][0]) for i in range(len(response))]
             master_number_data = [pd.Series(float(response[i][1])) for i in range(len(response))]
             df = pd.concat(master_number_data, axis=1, keys=[label for label in master_label_data])
@@ -51,8 +51,8 @@ class Search():
         return df
 
 
-    #return wheel feature_of_interest for input sheet 
     def wheel_feature_compiler(self, in_filename,feature_of_interest):
+      '''return wheel feature_of_interest for input sheet '''
         columns = ["pos","EffVel","effUPT","LeftVel","LeftUPT","RightVel","RightUPT"]
         df = pd.DataFrame(columns=columns)
         input_file = open(in_filename)
@@ -70,8 +70,9 @@ class Search():
         return df[feature_of_interest]
 
 
-    #return cavity feature_of_interest for input sheet 
+  
     def cavity_feature_compiler(self, in_filename,feature_of_interest):
+      '''return cavity feature_of_interest for input sheet '''
         columns = ["Row#","Position1","MC1","SG1","X1","dF1","ddB1","dQ1","Position2","MC2","SG2","X2","dF2","ddB2","dQ2","Position3","MC3","SG3","X3","dF3","ddB3","dQ3","Position4","MC4","SG4","X4","dF4","ddB4","dQ4","Position5","MC5","SG5","X5","dF5","ddB5","dQ5","Position6","MC6","SG6","X6","dF6","ddB6","dQ6","Position7","MC7","SG7","X7","dF7","ddB7","dQ7"]
         df = pd.DataFrame(columns =columns)
         input_file = open(in_filename)
@@ -89,8 +90,9 @@ class Search():
         return df[feature_of_interest]
 
 
-    #produce complete_df with the input sheet as the last column
+    
     def input_preprocess(self, in_filename,feature_of_interest):
+      '''produce complete_df with the input sheet as the last column'''
         db_df = self.df_builder(feature_of_interest)
 
         if feature_of_interest == "EffVel":
@@ -114,8 +116,9 @@ class Search():
         return complete_df
 
 
-    #use cos_similarity to compare
+    
     def compare_input_with_db(self, complete_df,feature_of_interest,top_x):
+      '''use cos_similarity to compare input sheet with db'''
         ratings={}
         result_dic={}
         for sheet in complete_df:
@@ -145,8 +148,9 @@ class Search():
         return result_dic
    
 
-    #reading in first chunk of data from csv (wheel data)
+    
     def read_info_wheel(self, sheet):
+      '''reading in first chunk of data from csv (wheel data)'''
         l = []
         i = 0
 
@@ -178,8 +182,9 @@ class Search():
         return l 
 
 
-    #returns certain column from dataset
+    
     def get_n_column(self, l, n):
+      '''returns certain column from dataset'''
         col = []
 
         for row in l:
@@ -205,8 +210,9 @@ class Search():
     def get_vel_col(self, df, sheet):
         return df[sheet]
 
-    #converting strings to float representation and replacing empty strings with 0
+    
     def replacewithzero(self, l):
+      '''converting strings to float representation and replacing empty strings with 0'''
         #newl = [x if not isinstance(x,str) else 0 for x in l]
         newl = [float(x) if (x != '') else 0 for x in l]
         return newl
